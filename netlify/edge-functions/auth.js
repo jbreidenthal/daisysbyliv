@@ -27,4 +27,4 @@ export default async (request, context) => {
   return deny(401, { "WWW-Authenticate": 'Basic realm="Daisys Manage", charset="UTF-8"' });
 };
 
-export const config = { path: ["/manage", "/manage/*", "/api/board"] };
+export const config = { path: ["/cockpit", "/cockpit/*", "/api/board"] };

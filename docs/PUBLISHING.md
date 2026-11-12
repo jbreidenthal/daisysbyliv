@@ -43,10 +43,10 @@ Edit files in `site/`, commit to the `publish` branch and push. Netlify rebuilds
 ## Not included on purpose
 The scrum board in `board/` is **not** part of the public site. It has no login on a normal website, so it stays private on claude.ai until a protected version is set up.
 
-## The board at daisysbyliv.com/manage
+## The board at daisysbyliv.com/cockpit
 
-Liv's scrum board lives on the site at `/manage/`. It is behind a password and its cards are stored in Netlify Blobs (no extra service to set up).
+Liv's scrum board lives on the site at `/cockpit/`. It is behind a password and its cards are stored in Netlify Blobs (no extra service to set up).
 
 1. In Netlify: Project configuration, Environment variables, add `MANAGE_PASSWORD` with the password Liv will use. Any username works at the prompt.
-2. Redeploy (Deploys, Trigger deploy). Until the variable is set, `/manage/` and `/api/board` refuse everyone.
-3. The page is `site/manage/index.html`, the data function is `netlify/functions/board.mjs` and the password check is `netlify/edge-functions/auth.js`.
+2. Redeploy (Deploys, Trigger deploy). Until the variable is set, `/cockpit/` and `/api/board` refuse everyone.
+3. The page is `site/cockpit/index.html`, the data function is `netlify/functions/board.mjs` and the password check is `netlify/edge-functions/auth.js`.
