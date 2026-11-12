@@ -27,6 +27,9 @@ body{margin:0;background:var(--petal);color:var(--ink);font:300 17px/1.65 var(--
 .top .logo{width:120px}
 .top{visibility:visible}
 .tag{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--rose)}
+.toplinks{display:flex;align-items:center;gap:24px}
+.cockpit{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rose);padding-bottom:2px}
+.cockpit:hover{color:var(--rose)}
 .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,72px);align-items:center;padding-block:clamp(16px,4vw,48px) clamp(48px,7vw,96px)}
 .hero>*{min-width:0}
 .hero .logo{width:min(100%,520px);margin-bottom:8px}
@@ -59,6 +62,7 @@ h2{font:400 clamp(28px,3.6vw,42px)/1.15 var(--serif);margin:0 0 12px;text-wrap:b
 footer{border-top:1px solid var(--blush);padding-block:40px 56px;display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:center}
 footer .logo{width:96px}
 footer p{margin:0;font-size:14px;letter-spacing:.06em}
+@media(max-width:560px){.toplinks{gap:14px}.cockpit,.tag{letter-spacing:.16em}}
 @media(max-width:820px){
   .hero{grid-template-columns:1fr}
   .shot{order:-1;max-width:420px;margin-inline:auto;width:100%}
@@ -68,6 +72,12 @@ footer p{margin:0;font-size:14px;letter-spacing:.06em}
 @media(prefers-reduced-motion:reduce){.pill i{animation:none}}
 a:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
 .float{position:fixed;z-index:20;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));background:var(--cream);border:1px solid var(--blush);border-radius:24px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(90,64,61,.22)}
+.float{padding:0;overflow:hidden}
+.float .toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:none;border:0;color:var(--ink);font:400 13px var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:13px 20px;cursor:pointer;text-align:left}
+.float .toggle::after{content:"";width:8px;height:8px;border-right:1.5px solid var(--rose);border-bottom:1.5px solid var(--rose);transform:rotate(-135deg) translate(-2px,-2px);transition:transform .2s;flex:none}
+.float.collapsed .toggle::after{transform:rotate(45deg)}
+.float .body{padding:0 22px 18px}
+.float.collapsed .body{display:none}
 .float h2{font-size:28px;margin:0 0 6px}
 .float .sub{margin:0 0 14px;font-size:15px;line-height:1.5}
 .float .eyebrow{margin-bottom:8px}
@@ -78,11 +88,8 @@ a:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
 .float button:disabled{opacity:.6;cursor:default}
 .float .fine{margin:12px 0 0;font-size:12.5px;line-height:1.5}
 .float a,.priv a{color:var(--ink);text-decoration-color:var(--rose);text-underline-offset:3px}
-.float button:focus-visible,.float input:focus-visible,.float a:focus-visible,.fab:focus-visible,.close:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-.close{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--ink);font-size:26px;line-height:1;cursor:pointer;padding:4px 8px}
+.float button:focus-visible,.float input:focus-visible,.float a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .msg{margin:10px 0 0;min-height:1.4em;font-size:14px}
-.fab{position:fixed;z-index:20;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));font:400 13px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--cream);background:var(--rose);border:0;border-radius:999px;padding:15px 26px;cursor:pointer;box-shadow:0 12px 34px rgba(90,64,61,.25)}
-.float[hidden],.fab[hidden]{display:none!important}
 .priv{background:var(--cream);margin-inline:calc(50% - 50vw);padding-inline:max(16px,calc(50vw - 580px));padding-block:clamp(40px,6vw,72px);scroll-margin-top:16px}
 .priv h2{font-size:30px}
 .priv p{max-width:68ch;margin:0 0 12px;font-size:15px}
@@ -93,7 +100,7 @@ footer{padding-bottom:140px}
 <div class="wrap" style="--logo:url(img/logo.png)">
   <header class="top">
     <span class="logo" role="img" aria-label="Daisys"></span>
-    <span class="tag">Coming soon</span>
+    <span class="toplinks"><a class="cockpit" href="https://cockpit.daisysbyliv.com" target="_blank" rel="noopener">CEO Cockpit</a><span class="tag">Coming soon</span></span>
   </header>
 
   <section class="hero">
@@ -147,27 +154,25 @@ footer{padding-bottom:140px}
     <p>Daisys by Liv Breidenthal &middot; Coming soon</p>
   </footer>
 </div>
-<aside class="float" id="box" aria-label="Join our virtual launch party">
-  <button class="close" id="min" type="button" aria-label="Minimise">&times;</button>
-  <p class="eyebrow">You are invited</p>
-  <h2>Join our virtual launch party</h2>
-  <p class="sub">Leave your email and we will send you the invitation.</p>
-  <form id="f" name="launch-party" method="POST" action="/thanks.html" data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
-    <input type="hidden" name="form-name" value="launch-party">
-    <p hidden><label>Do not fill this in <input name="bot-field"></label></p>
-    <input id="email" name="email" type="email" autocomplete="email" placeholder="Your email address" aria-label="Email address" required>
-    <button class="go" id="go" type="submit">Join the party</button>
-  </form>
-  <p class="msg" id="msg" role="status"></p>
-  <p class="fine">By sending your email, you agree to our <a href="#privacy">privacy statement</a>.</p>
+<aside class="float collapsed" id="box" aria-label="Join our virtual launch party">
+  <button class="toggle" id="toggle" type="button" aria-expanded="false" aria-controls="body">Join our virtual launch party</button>
+  <div class="body" id="body">
+    <p class="sub">Leave your email and we will send you the invitation.</p>
+    <form id="f" name="launch-party" method="POST" action="/thanks.html" data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
+      <input type="hidden" name="form-name" value="launch-party">
+      <p hidden><label>Do not fill this in <input name="bot-field"></label></p>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="Your email address" aria-label="Email address" required>
+      <button class="go" id="go" type="submit">Send me the invitation</button>
+    </form>
+    <p class="msg" id="msg" role="status"></p>
+    <p class="fine">By sending your email, you agree to our <a href="#privacy">privacy statement</a>.</p>
+  </div>
 </aside>
-<button class="fab" id="fab" type="button" hidden>Join our launch party</button>
 <script>
 (function(){
   var f=document.getElementById('f'),em=document.getElementById('email'),go=document.getElementById('go'),msg=document.getElementById('msg');
-  var box=document.getElementById('box'),fab=document.getElementById('fab');
-  document.getElementById('min').addEventListener('click',function(){box.hidden=true;fab.hidden=false});
-  fab.addEventListener('click',function(){fab.hidden=true;box.hidden=false;em.focus()});
+  var box=document.getElementById('box'),tg=document.getElementById('toggle');
+  tg.addEventListener('click',function(){var c=box.classList.toggle('collapsed');tg.setAttribute('aria-expanded',String(!c));if(!c)em.focus()});
   f.addEventListener('submit',function(e){
     e.preventDefault();
     var v=em.value.trim();
