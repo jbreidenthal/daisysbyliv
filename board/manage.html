@@ -52,6 +52,22 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
 .meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .tag{border-radius:99px;padding:2px 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
 .tag[data-p="Product"]{background:var(--product-bg)}.tag[data-p="Price"]{background:var(--price-bg)}.tag[data-p="Place"]{background:var(--place-bg)}.tag[data-p="Promotion"]{background:var(--promo-bg)}
+.ctop{display:flex;gap:10px;align-items:baseline}
+.rank{font:400 14px/1.4 var(--sans);color:var(--rose);min-width:1.4em}
+.ctop .t{flex:1;min-width:0}
+.tools{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tools .grp{display:flex;gap:4px;align-items:center}
+.tools .sp{flex:1}
+.lnk{font:400 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--rose);padding:2px 0;cursor:pointer}
+.lnk:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.due{font-size:12px}
+.due.late{color:#a0524a;font-weight:400}
+.legend{font-size:14px;color:var(--muted);margin:0 0 16px;max-width:70ch}
+.ai{border-top:1px solid var(--blush);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.ai h3{font:500 22px var(--serif);margin:0}
+.ai .links{display:flex;gap:8px;flex-wrap:wrap}
+.ai a{font:400 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--cream);background:var(--ink);border-radius:99px;padding:10px 16px}
+.ai a:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
 .mv{margin-left:auto;display:flex;gap:4px}
 .mv button{font:400 14px var(--sans);width:28px;height:28px;border-radius:50%;border:1px solid var(--blush);background:var(--petal);color:var(--ink);cursor:pointer;padding:0}
 .mv button:hover{background:var(--blush)}
@@ -98,6 +114,7 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
   </section>
 
   <div class="filters" id="filters" role="group" aria-label="Filter by P"></div>
+  <p class="legend">The top card in each column matters most. Drag a card to move it, or use the arrows: up and down change its priority, left and right move it to another column. Click Edit on any card to change it.</p>
   <p class="status" id="status" role="status"></p>
   <main class="board" id="board"></main>
 </div>
@@ -152,29 +169,50 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
     document.getElementById('pct').textContent=t?pct+'%':'';
   }
 
+  function fmtDue(s){var p=(s||'').split('-');if(p.length!==3)return '';var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+  function isLate(c){if(!c.due||c.status==='done')return false;var p=c.due.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+1);return d<new Date()}
+  function circle(label,txt,dis,fn){var b=el('button',{type:'button','aria-label':label,title:label,text:txt});b.disabled=!!dis;b.addEventListener('click',fn);return b}
+
   function cardEl(c,list,idx,colIdx){
     var card=el('div',{cls:'card','data-p':c.p,draggable:'true'});
     card.addEventListener('dragstart',function(e){dragId=c.id;card.classList.add('drag');try{e.dataTransfer.setData('text/plain',c.id);e.dataTransfer.effectAllowed='move'}catch(x){}});
     card.addEventListener('dragend',function(){card.classList.remove('drag');dragId=null;document.querySelectorAll('.col.over').forEach(function(x){x.classList.remove('over')})});
     card.addEventListener('dragover',function(e){e.preventDefault()});
     card.addEventListener('drop',function(e){e.preventDefault();e.stopPropagation();dropOn(c.status,c)});
+    var top=el('div',{cls:'ctop'});
+    top.appendChild(el('span',{cls:'rank',text:String(idx+1),title:'Priority '+(idx+1)+' in this column'}));
     var t=el('button',{cls:'t',type:'button',text:c.title});
     t.addEventListener('click',function(){openSheet(c)});
+    top.appendChild(t);
     var meta=el('div',{cls:'meta'});
     meta.appendChild(el('span',{cls:'tag','data-p':c.p,text:c.p}));
     if(c.size)meta.appendChild(el('span',{text:'Size '+c.size}));
+    if(c.due)meta.appendChild(el('span',{cls:'due'+(isLate(c)?' late':''),text:(isLate(c)?'Overdue ':'Due ')+fmtDue(c.due)}));
     if(c.notes)meta.appendChild(el('span',{text:'Has notes'}));
-    var mv=el('div',{cls:'mv'});
-    var l=el('button',{type:'button','aria-label':'Move to '+(colIdx>0?COLS[colIdx-1].name:''),text:'←'});
-    var r=el('button',{type:'button','aria-label':'Move to '+(colIdx<3?COLS[colIdx+1].name:''),text:'→'});
-    l.disabled=colIdx===0;r.disabled=colIdx===3;
-    l.addEventListener('click',function(){moveTo(c,COLS[colIdx-1].id)});
-    r.addEventListener('click',function(){moveTo(c,COLS[colIdx+1].id)});
-    mv.appendChild(l);mv.appendChild(r);meta.appendChild(mv);
-    card.appendChild(t);card.appendChild(meta);
+    var tools=el('div',{cls:'tools'});
+    var pr=el('div',{cls:'grp',role:'group','aria-label':'Priority'});
+    pr.appendChild(circle('Move up in priority','\u2191',idx===0,function(){reorder(c,list,idx,-1)}));
+    pr.appendChild(circle('Move down in priority','\u2193',idx===list.length-1,function(){reorder(c,list,idx,1)}));
+    var mv=el('div',{cls:'grp',role:'group','aria-label':'Move to another column'});
+    mv.appendChild(circle(colIdx>0?'Move to '+COLS[colIdx-1].name:'No column to the left','\u2190',colIdx===0,function(){moveTo(c,COLS[colIdx-1].id)}));
+    mv.appendChild(circle(colIdx<3?'Move to '+COLS[colIdx+1].name:'No column to the right','\u2192',colIdx===3,function(){moveTo(c,COLS[colIdx+1].id)}));
+    var ed=el('button',{cls:'lnk',type:'button',text:'Edit'});ed.addEventListener('click',function(){openSheet(c)});
+    var tip=el('button',{cls:'lnk',type:'button',text:'AI tips'});tip.addEventListener('click',function(){openSheet(c,true)});
+    tools.appendChild(pr);tools.appendChild(mv);tools.appendChild(el('span',{cls:'sp'}));tools.appendChild(ed);tools.appendChild(tip);
+    card.appendChild(top);card.appendChild(meta);card.appendChild(tools);
     return card;
   }
 
+  function reorder(c,list,idx,dir){
+    var order;
+    if(dir<0){var prev=list[idx-1],pp=list[idx-2];if(!prev)return;order=pp?((pp.order||0)+(prev.order||0))/2:(prev.order||0)-1000}
+    else{var next=list[idx+1],nn=list[idx+2];if(!next)return;order=nn?((next.order||0)+(nn.order||0))/2:(next.order||0)+1000}
+    save(c,{order:order});
+  }
+
+  function aiPrompt(c){
+    return 'I am Liv, building a small skin care and lip care brand called Daisys. The products are environmental and skin friendly. I am working through the four Ps of marketing and need help with one action.\n\nP: '+c.p+'\nAction: '+c.title+(c.notes?'\nMy notes: '+c.notes:'')+'\n\nPlease give me practical, specific tips for this action: a short step-by-step plan, the common mistakes to avoid, and a rough idea of cost and time. Use plain language. If the rules or prices depend on the country, ask me where I will sell first. Point out anything I should check with an expert, such as cosmetics regulation, safety or legal matters.';
+  }
   function moveTo(c,status){var last=cards.filter(function(x){return x.status===status}).reduce(function(m,x){return Math.max(m,x.order||0)},0);save(c,{status:status,order:last+1000})}
   function dropOn(status,target){
     var c=cards.filter(function(x){return x.id===dragId})[0];if(!c)return;
@@ -222,7 +260,7 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
     });
   }
 
-  function openSheet(c){
+  function openSheet(c,focusTips){
     var host=document.getElementById('sheetHost');host.textContent='';
     var scrim=el('div',{cls:'scrim'});
     var sh=el('div',{cls:'sheet',role:'dialog','aria-modal':'true','aria-label':'Edit action'});
@@ -240,7 +278,8 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
     var sz=sel([{v:'S',l:'Small'},{v:'M',l:'Medium'},{v:'L',l:'Large'}],c.size||'M');
     sh.appendChild(field('Action',title,'e_title'));
     sh.appendChild(el('div',{cls:'row'},[field('P',p,'e_p'),field('Status',st,'e_st')]));
-    sh.appendChild(field('Effort',sz,'e_sz'));
+    var due=el('input',{type:'date'});due.value=c.due||'';
+    sh.appendChild(el('div',{cls:'row'},[field('Effort',sz,'e_sz'),field('Due date',due,'e_due')]));
     sh.appendChild(field('Notes',notes,'e_notes'));
     var acts=el('div',{cls:'acts'});
     var sv=el('button',{cls:'btn',type:'button',text:'Save'});
@@ -249,7 +288,7 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
     var armed=false;
     sv.addEventListener('click',function(){
       var v=title.value.trim();if(!v)return;
-      var patch={title:v,p:p.value,size:sz.value,notes:notes.value};
+      var patch={title:v,p:p.value,size:sz.value,notes:notes.value,due:due.value};
       if(st.value!==c.status){var last=cards.filter(function(x){return x.status===st.value}).reduce(function(m,x){return Math.max(m,x.order||0)},0);patch.status=st.value;patch.order=last+1000}
       save(c,patch).then(close);
     });
@@ -259,8 +298,33 @@ h1{font:400 clamp(30px,4vw,44px)/1.1 var(--serif);margin:6px 0 0}
       write(function(){return db.collection('cards').doc(c.id).delete()}).then(close);
     });
     [sv,cn,del].forEach(function(x){acts.appendChild(x)});
+    var topBtn=el('button',{cls:'btn ghost',type:'button',text:'Send to top of column'});
+    topBtn.addEventListener('click',function(){
+      var st2=st.value;var min=cards.filter(function(x){return x.status===st2&&x.id!==c.id}).reduce(function(m,x){return Math.min(m,x.order||0)},Infinity);
+      var patch={order:(isFinite(min)?min:1000)-1000};if(st2!==c.status)patch.status=st2;
+      save(c,patch).then(close);
+    });
+    acts.appendChild(topBtn);
     sh.appendChild(acts);
-    scrim.appendChild(sh);host.appendChild(scrim);title.focus();
+    // AI helper
+    var ai=el('div',{cls:'ai',id:'aiSection'});
+    ai.appendChild(el('h3',{text:'Get tips from a free AI helper'}));
+    ai.appendChild(el('p',{cls:'note',text:'These links open a free AI assistant in a new tab with this action already written out. Check what it says, especially anything about rules, safety or law.'}));
+    var links=el('div',{cls:'links'});
+    var la=el('a',{target:'_blank',rel:'noopener noreferrer',text:'Ask Claude'});
+    var lb=el('a',{target:'_blank',rel:'noopener noreferrer',text:'Ask ChatGPT'});
+    var cp=el('button',{cls:'btn ghost',type:'button',text:'Copy prompt'});
+    function prompt(){return aiPrompt({title:title.value||c.title,p:p.value,notes:notes.value})}
+    function refresh(){var q=encodeURIComponent(prompt());la.href='https://claude.ai/new?q='+q;lb.href='https://chatgpt.com/?q='+q}
+    refresh();title.addEventListener('input',refresh);notes.addEventListener('input',refresh);p.addEventListener('change',refresh);
+    cp.addEventListener('click',function(){
+      var txt=prompt();
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){cp.textContent='Copied'},function(){cp.textContent='Press Ctrl+C';var ta=el('textarea');ta.value=txt;ai.appendChild(ta);ta.select()});
+    });
+    links.appendChild(la);links.appendChild(lb);links.appendChild(cp);ai.appendChild(links);
+    ai.appendChild(el('p',{cls:'note',text:'Gemini and other assistants: use Copy prompt and paste it in.'}));
+    sh.appendChild(ai);
+    scrim.appendChild(sh);host.appendChild(scrim);if(focusTips){document.getElementById('aiSection').scrollIntoView();la.focus()}else title.focus();
   }
 
   // sprint header
